@@ -1,0 +1,28 @@
+import React from 'react';
+
+// Basitleştirilmiş ağ ikonunu metinsiz döndüren logo bileşeni
+export default function Logo() {
+  return (
+    <svg
+      width="100%"
+      height="100%"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g transform="translate(0,0)">
+        {/* Düğümler */}
+        <circle cx="6" cy="12" r="3" fill="#B0B4BC" />
+        <circle cx="18" cy="6" r="3" fill="#6B7280" />
+        <circle cx="18" cy="18" r="3" fill="#D1D5DB" />
+        {/* Bağlantılar */}
+        <path
+          d="M6 12 L18 6 M6 12 L18 18 M18 6 L18 18"
+          stroke="#B0B4BC"
+          strokeWidth="1.5"
+          opacity="0.8"
+        />
+      </g>
+    </svg>
+  );
+} 

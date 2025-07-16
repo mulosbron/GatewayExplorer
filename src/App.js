@@ -1,24 +1,351 @@
-import logo from './logo.svg';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { HashRouter as Router, Route, Routes, Link, useLocation } from 'react-router-dom';
+import Map from './components/Map';
+import Graph from './components/Graph';
+import Statistics from './components/Statistics';
+import FilterPanel from './components/FilterPanel';
+import { getGateways, filterGateways } from './services/gatewayService';
+import Logo from './components/Logo';
 import './App.css';
+
+function AppContent() {
+  const [allGateways, setAllGateways] = useState([]);
+  const [filteredGateways, setFilteredGateways] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filters, setFilters] = useState({});
+  const [selectedGateway, setSelectedGateway] = useState(null);
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  
+  const location = useLocation();
+
+  // Fetch gateways data
+  useEffect(() => {
+    const fetchGatewaysData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        console.log('🚀 Fetching gateway data...');
+        
+        const data = await getGateways();
+        console.log(`✅ Loaded ${data.length} gateways`);
+        
+        setAllGateways(data);
+        setLastRefresh(new Date());
+      } catch (err) {
+        console.error('❌ Error fetching gateways:', err);
+        setError('An error occurred while loading gateway data. Please check your internet connection and try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGatewaysData();
+  }, []);
+
+  // Apply filters to gateways
+  const applyFilters = useCallback((filters) => {
+    const filtered = filterGateways(allGateways, filters);
+    setFilteredGateways(filtered);
+  }, [allGateways]);
+
+  // Update filtered gateways when filters or gateways change
+  useEffect(() => {
+    applyFilters(filters);
+  }, [filters, applyFilters]);
+
+  // Handle filter changes
+  const handleFiltersChange = useCallback((newFilters) => {
+    setFilters(newFilters);
+  }, []);
+
+  // Handle gateway selection
+  const handleGatewaySelect = useCallback((gateway) => {
+    setSelectedGateway(gateway);
+  }, []);
+
+  // Refresh data with modern animation
+  const refreshData = async () => {
+    setRefreshing(true);
+    try {
+      const data = await getGateways();
+      setAllGateways(data);
+      setLastRefresh(new Date());
+      
+      // Success feedback
+      setTimeout(() => setRefreshing(false), 800);
+    } catch (err) {
+      setError('Failed to refresh data');
+      setRefreshing(false);
+    }
+  };
+
+  // Navigation items with modern icons
+  const navItems = [
+    { path: '/', label: 'Map', description: 'Geographic View' },
+    { path: '/graph', label: 'Graph', description: 'Network View' },
+    { path: '/statistics', label: 'Statistics', description: 'Detailed Analytics' },
+    { 
+      url: 'https://logosnodos.medium.com/run-your-first-ar-io-node-complete-setup-guide-0ea2028b8022', 
+      label: 'Setup Guide', 
+      description: 'How to run ARIO gateway',
+      external: true 
+    }
+  ];
+
+  const currentGateways = filteredGateways.length > 0 || Object.values(filters).some(f => f !== '') 
+    ? filteredGateways 
+    : allGateways;
+
+  // Modern loading state
+  if (loading && allGateways.length === 0) {
+    return (
+      <div className="loading">
+        <div className="loading-spinner"></div>
+        <div style={{
+          fontSize: 'var(--font-size-lg)',
+          fontWeight: 600,
+          color: 'var(--text-primary)',
+          textAlign: 'center'
+        }}>
+          Loading AR.IO Gateway Data...
+        </div>
+        <div style={{
+          fontSize: 'var(--font-size-sm)',
+          color: 'var(--text-muted)',
+          textAlign: 'center',
+          maxWidth: '400px'
+        }}>
+          Analyzing gateways and checking health status
+        </div>
+      </div>
+    );
+  }
+
+  // Modern error state
+  if (error && allGateways.length === 0) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        flexDirection: 'column',
+        gap: 'var(--space-xl)',
+        background: 'var(--bg-primary)',
+        padding: 'var(--space-xl)'
+      }}>
+        <div className="card" style={{ 
+          maxWidth: '600px', 
+          textAlign: 'center',
+          animation: 'fadeIn 0.6s ease-out'
+        }}>
+          <h2 style={{ 
+            color: 'var(--danger)', 
+            marginBottom: 'var(--space-lg)',
+            fontSize: 'var(--font-size-2xl)',
+            fontWeight: 700
+          }}>
+            Data Loading Error
+          </h2>
+          <p style={{ 
+            color: 'var(--text-secondary)', 
+            marginBottom: 'var(--space-xl)',
+            lineHeight: 1.6
+          }}>
+            {error}
+          </p>
+          <button onClick={refreshData} className="btn btn-primary">
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="app-container">
+      {/* Modern Header - Completely Redesigned */}
+      <header className="app-header">
+        <div className="header-wrapper">
+          {/* Left: Brand Section + Setup Guide */}
+          <div className="header-left">
+            <Link to="/" className="brand-link">
+            <div className="brand-logo">
+                <Logo />
+            </div>
+              <div className="brand-content">
+                <h1 className="brand-title">AR.IO Gateway Explorer</h1>
+                <span className="brand-subtitle">Decentralized Gateway Analytics</span>
+            </div>
+          </Link>
+          
+          {/* Setup Guide on the left */}
+          <a
+            href="https://logosnodos.medium.com/run-your-first-ar-io-node-complete-setup-guide-0ea2028b8022"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-item external-link setup-guide-left"
+            title="How to run ARIO gateway"
+          >
+            Setup Guide
+            <span className="external-icon">↗</span>
+          </a>
+          </div>
+
+          {/* Right: Navigation */}
+          <nav className="header-right">
+            {navItems.filter(item => !item.external).map((item, index) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
+                title={item.description}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      </header>
+
+      {/* Main Layout */}
+      <div className="main-layout">
+        {/* Content Area */}
+        <main className="content-area">
+          <Routes>
+            <Route 
+              path="/statistics" 
+              element={<Statistics gateways={allGateways} />} 
+            />
+            <Route 
+              path="/graph" 
+              element={
+                <Graph 
+                  gateways={allGateways}
+                />
+              } 
+            />
+            <Route 
+              path="/" 
+              element={
+                <Map 
+                  gateways={allGateways}
+                />
+              } 
+            />
+          </Routes>
+        </main>
+      </div>
+
+
+
+      {/* Modern Footer */}
+      <footer className="modern-footer">
+        <div className="footer-container">
+          {/* Main Footer Content */}
+          <div className="footer-main">
+            <div className="footer-brand">
+              <p className="footer-description">
+                Gateways to the permanent web. Explore and analyze AR.IO gateways that facilitate data hosting, 
+                domain management, and seamless querying across the decentralized network.
+              </p>
+            </div>
+
+            <div className="footer-links-grid">
+              <div className="footer-column">
+                <h4>Navigation</h4>
+                <ul>
+                  <li><Link to="/">Global Map</Link></li>
+                  <li><Link to="/graph">Network Graph</Link></li>
+                  <li><Link to="/statistics">Statistics</Link></li>
+                </ul>
+              </div>
+
+              <div className="footer-column">
+                <h4>Documentation</h4>
+                <ul>
+                  <li><a href="https://docs.ar.io/" target="_blank" rel="noopener noreferrer">AR.IO Docs</a></li>
+                  <li><a href="https://docs.arweave.org/developers/" target="_blank" rel="noopener noreferrer">Arweave Docs</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer Bottom */}
+          <div className="footer-bottom">
+            <div className="footer-bottom-content">
+              <div className="footer-credits">
+                <p>
+                  <strong>Made by <a href="https://github.com/mulosbron" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>MULOSBRON</a></strong> • 
+                  <span> Powered by Permaweb</span>
+                </p>
+                <p className="footer-tech">
+                  Built with React • D3.js • Leaflet
+                </p>
+              </div>
+              
+              <div className="footer-meta">
+                <div className="footer-update">
+                  <span>Last Updated 9 Jul 2025</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+
+
+      {/* Loading overlay */}
+      {refreshing && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 'var(--z-modal)',
+          animation: 'fadeIn 0.3s ease-out'
+        }}>
+          <div className="card" style={{ 
+            textAlign: 'center',
+            animation: 'slideUp 0.4s ease-out'
+          }}>
+            <div className="loading-spinner" style={{ margin: '0 auto var(--space-lg)' }} />
+            <div style={{
+              fontSize: 'var(--font-size-lg)',
+              fontWeight: 600,
+              color: 'var(--text-primary)',
+              marginBottom: 'var(--space-sm)'
+            }}>
+              Refreshing Data
+            </div>
+            <div style={{
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--text-muted)'
+            }}>
+              Please wait...
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <AppContent />
+    </Router>
   );
 }
 

@@ -1,0 +1,69 @@
+Compiled with problems:
+×
+ERROR in ./src/components/Statistics.js
+Module build failed (from ./node_modules/babel-loader/lib/index.js):
+SyntaxError: C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\src\components\Statistics.js: Expected corresponding JSX closing tag for <ChartContainer>. (244:8)
+
+  242 |         <ChartContainer title="Top Countries" icon="🌍">
+  243 |           <BarChart data={stats.countryStats} color="#4A90E2" />
+> 244 |         </Container>
+      |         ^
+  245 |
+  246 |         <ChartContainer title="Top Regions" icon="📍">
+  247 |           <BarChart data={stats.regionStats} color="#50E3C2" />
+    at constructor (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:367:19)
+    at FlowParserMixin.raise (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:6627:19)
+    at FlowParserMixin.jsxParseElementAt (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:4757:16)
+    at FlowParserMixin.jsxParseElementAt (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:4728:32)
+    at FlowParserMixin.jsxParseElementAt (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:4728:32)
+    at FlowParserMixin.jsxParseElement (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:4779:17)
+    at FlowParserMixin.parseExprAtom (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:4789:19)
+    at FlowParserMixin.parseExprSubscripts (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:11076:23)
+    at FlowParserMixin.parseUpdate (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:11061:21)
+    at FlowParserMixin.parseMaybeUnary (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:11041:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:10894:61)
+    at FlowParserMixin.parseExprOps (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:10899:23)
+    at FlowParserMixin.parseMaybeConditional (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:10876:23)
+    at FlowParserMixin.parseMaybeAssign (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:10826:21)
+    at C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:3528:39
+    at FlowParserMixin.tryParse (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:6935:20)
+    at FlowParserMixin.parseMaybeAssign (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:3528:18)
+    at C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:10795:39
+    at FlowParserMixin.allowInAnd (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:12427:12)
+    at FlowParserMixin.parseMaybeAssignAllowIn (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:10795:17)
+    at FlowParserMixin.parseMaybeAssignAllowInOrVoidPattern (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:12494:17)
+    at FlowParserMixin.parseParenAndDistinguishExpression (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:11674:28)
+    at FlowParserMixin.parseParenAndDistinguishExpression (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:3621:18)
+    at FlowParserMixin.parseExprAtom (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:11326:23)
+    at FlowParserMixin.parseExprAtom (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:4794:20)
+    at FlowParserMixin.parseExprSubscripts (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:11076:23)
+    at FlowParserMixin.parseUpdate (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:11061:21)
+    at FlowParserMixin.parseMaybeUnary (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:11041:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:10894:61)
+    at FlowParserMixin.parseExprOps (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:10899:23)
+    at FlowParserMixin.parseMaybeConditional (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:10876:23)
+    at FlowParserMixin.parseMaybeAssign (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:10826:21)
+    at FlowParserMixin.parseMaybeAssign (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:3579:18)
+    at FlowParserMixin.parseExpressionBase (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:10779:23)
+    at C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:10775:39
+    at FlowParserMixin.allowInAnd (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:12422:16)
+    at FlowParserMixin.parseExpression (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:10775:17)
+    at FlowParserMixin.parseReturnStatement (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:13142:28)
+    at FlowParserMixin.parseStatementContent (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:12798:21)
+    at FlowParserMixin.parseStatementLike (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:2946:24)
+    at FlowParserMixin.parseStatementListItem (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:13316:61)
+    at FlowParserMixin.parseBlockBody (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:13309:10)
+    at FlowParserMixin.parseBlock (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:13297:10)
+    at FlowParserMixin.parseFunctionBody (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:12101:24)
+    at C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:2920:63
+    at FlowParserMixin.forwardNoArrowParamsConversionAt (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:3096:16)
+    at FlowParserMixin.parseFunctionBody (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:2920:12)
+    at FlowParserMixin.parseArrowExpression (C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\node_modules\@babel\parser\lib\index.js:12076:10)
+ERROR in ./src/services/gatewayService.js 3:0-33
+Module not found: Error: Can't resolve './arweave' in 'C:\Users\duggy\OneDrive\Belgeler\PermawebProjects\ariogatewayexplorer\src\services'
+ERROR
+[eslint] 
+src\components\Statistics.js
+  Line 244:8:  Parsing error: Expected corresponding JSX closing tag for <ChartContainer>. (244:8)

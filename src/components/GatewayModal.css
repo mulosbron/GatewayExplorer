@@ -1,0 +1,228 @@
+/* GatewayModal Modern Tasarım */
+.gateway-modal-card {
+  border: none;
+  background: transparent;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  margin: 0;
+  padding: 2rem;
+  color: var(--text-primary);
+  z-index: 9999;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  box-sizing: border-box;
+}
+.gateway-modal-card[open] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: modalSlideIn 0.3s cubic-bezier(.4,0,.2,1);
+}
+
+.gateway-modal-card::backdrop {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(12px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Modal açıkken body scroll'unu engelle */
+body:has(.gateway-modal-card[open]) {
+  overflow: hidden;
+}
+.modal-card-content {
+  background: #18181C;
+  border-radius: 1.2rem;
+  padding: 2.2rem 2rem 2rem 2rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+  min-width: 320px;
+  max-width: 800px;
+  width: 100%;
+  position: relative;
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin: 0 auto;
+}
+.modal-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+.modal-status-dot {
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  box-shadow: 0 0 8px 2px rgba(16,185,129,0.15);
+  flex-shrink: 0;
+}
+.modal-card-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+}
+.modal-card-domain {
+  font-size: 0.98rem;
+  color: var(--text-muted);
+  font-family: monospace;
+  margin-top: 0.1rem;
+}
+.modal-card-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 2.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s;
+  border-radius: 50%;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-card-close:hover {
+  color: var(--danger);
+  background: #23232A;
+}
+.modal-divider {
+  border: none;
+  border-top: 1px solid #23232A;
+  margin: 0.7rem 0 1.1rem 0;
+}
+.modal-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.1rem 2.2rem;
+  margin-bottom: 1.2rem;
+}
+.modal-card-label {
+  font-size: 0.93rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 0.1rem;
+}
+.modal-card-value {
+  font-size: 1.08rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  word-break: break-all;
+}
+.modal-card-stake {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  margin-bottom: 1.2rem;
+}
+.modal-card-stake .modal-card-label {
+  font-size: 1.01rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.modal-card-stake .modal-card-value {
+  font-size: 1.2rem;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+.modal-card-box {
+  background: #23232A;
+  border-radius: 0.8rem;
+  padding: 1.1rem 1.2rem 0.7rem 1.2rem;
+  margin-bottom: 1.1rem;
+  border: 1px solid #23232A;
+}
+.modal-card-box-title {
+  font-size: 1.01rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 0.7rem;
+  letter-spacing: 0.01em;
+}
+.modal-card-box-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem 1.2rem;
+}
+.modal-card-box .modal-card-label {
+  font-size: 0.93rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.modal-card-box .modal-card-value {
+  font-size: 1.08rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Kopyalanabilir değerler */
+.copyable-value {
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+}
+
+.copyable-value:hover {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981 !important;
+}
+
+.copy-feedback {
+  position: absolute;
+  right: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #10B981;
+  font-weight: bold;
+  font-size: 0.9em;
+  animation: copyFadeIn 0.3s ease;
+}
+
+@keyframes copyFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+}
+@media (max-width: 600px) {
+  .gateway-modal-card, .modal-card-content {
+    min-width: 0;
+    max-width: 98vw;
+    padding: 1.1rem 0.5rem 1.1rem 0.5rem;
+  }
+  .modal-card-header {
+    gap: 0.7rem;
+  }
+  .modal-card-title {
+    font-size: 1.1rem;
+  }
+  .modal-card-domain {
+    font-size: 0.85rem;
+  }
+  .modal-card-grid, .modal-card-box-grid {
+    grid-template-columns: 1fr;
+    gap: 0.7rem 0;
+  }
+  .modal-card-stake {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+} 
