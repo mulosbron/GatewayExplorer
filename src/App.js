@@ -1,22 +1,18 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Route, Routes, Link, useLocation } from 'react-router-dom';
 import Map from './components/Map';
 import Graph from './components/Graph';
 import Statistics from './components/Statistics';
-import FilterPanel from './components/FilterPanel';
-import { getGateways, filterGateways } from './services/gatewayService';
+import { getAllGatewayDataV2 } from './services/gatewayService';
 import Logo from './components/Logo';
 import './App.css';
 
 function AppContent() {
   const [allGateways, setAllGateways] = useState([]);
-  const [filteredGateways, setFilteredGateways] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingStep, setLoadingStep] = useState('Initializing...');
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({});
-  const [selectedGateway, setSelectedGateway] = useState(null);
-  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
-  const [lastRefresh, setLastRefresh] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   
   const location = useLocation();
@@ -27,58 +23,58 @@ function AppContent() {
       try {
         setLoading(true);
         setError(null);
-        console.log('🚀 Fetching gateway data...');
-        
-        const data = await getGateways();
-        console.log(`✅ Loaded ${data.length} gateways`);
-        
+        setLoadingStep('Fetching gateway list...');
+        setProgress(10);
+        const data = await getAllGatewayDataV2({
+          onStep: (step) => setLoadingStep(step),
+          onProgress: (p) => setProgress(p)
+        });
+        setLoadingStep('Finalizing...');
+        setProgress(100);
         setAllGateways(data);
-        setLastRefresh(new Date());
       } catch (err) {
         console.error('❌ Error fetching gateways:', err);
         setError('An error occurred while loading gateway data. Please check your internet connection and try again.');
       } finally {
         setLoading(false);
+        setTimeout(() => {
+          setLoadingStep('');
+          setProgress(0);
+        }, 500);
       }
     };
 
     fetchGatewaysData();
   }, []);
 
-  // Apply filters to gateways
-  const applyFilters = useCallback((filters) => {
-    const filtered = filterGateways(allGateways, filters);
-    setFilteredGateways(filtered);
-  }, [allGateways]);
-
   // Update filtered gateways when filters or gateways change
   useEffect(() => {
-    applyFilters(filters);
-  }, [filters, applyFilters]);
-
-  // Handle filter changes
-  const handleFiltersChange = useCallback((newFilters) => {
-    setFilters(newFilters);
-  }, []);
-
-  // Handle gateway selection
-  const handleGatewaySelect = useCallback((gateway) => {
-    setSelectedGateway(gateway);
+    // Başlangıçta boş filtre uygula
   }, []);
 
   // Refresh data with modern animation
   const refreshData = async () => {
     setRefreshing(true);
+    setLoadingStep('Refreshing gateway data...');
+    setProgress(0);
     try {
-      const data = await getGateways();
+      const data = await getAllGatewayDataV2({
+        onStep: (step) => setLoadingStep(step),
+        onProgress: (p) => setProgress(p)
+      });
       setAllGateways(data);
-      setLastRefresh(new Date());
       
       // Success feedback
-      setTimeout(() => setRefreshing(false), 800);
+      setTimeout(() => {
+        setRefreshing(false);
+        setLoadingStep('');
+        setProgress(0);
+      }, 800);
     } catch (err) {
       setError('Failed to refresh data');
       setRefreshing(false);
+      setLoadingStep('');
+      setProgress(0);
     }
   };
 
@@ -95,14 +91,13 @@ function AppContent() {
     }
   ];
 
-  const currentGateways = filteredGateways.length > 0 || Object.values(filters).some(f => f !== '') 
-    ? filteredGateways 
-    : allGateways;
-
   // Modern loading state
   if (loading && allGateways.length === 0) {
     return (
       <div className="loading">
+        <div className="loading-progress-bar" style={{ height: 3, width: '100%', background: 'var(--bg-secondary)', position: 'relative', marginBottom: 12 }}>
+          <div style={{ height: 3, width: `${progress}%`, background: 'var(--success)', position: 'absolute', left: 0, top: 0, borderRadius: 2, transition: 'width 0.3s' }} />
+        </div>
         <div className="loading-spinner"></div>
         <div style={{
           fontSize: 'var(--font-size-lg)',
@@ -116,9 +111,18 @@ function AppContent() {
           fontSize: 'var(--font-size-sm)',
           color: 'var(--text-muted)',
           textAlign: 'center',
-          maxWidth: '400px'
+          maxWidth: '400px',
+          marginBottom: 8
         }}>
-          Analyzing gateways and checking health status
+          {loadingStep || 'Initializing gateway analysis...'}
+        </div>
+        <div style={{
+          fontSize: 'var(--font-size-xs)',
+          color: 'var(--text-muted)',
+          textAlign: 'center',
+          opacity: 0.7
+        }}>
+          {progress > 0 && progress < 100 ? `${progress}% complete` : ''}
         </div>
       </div>
     );

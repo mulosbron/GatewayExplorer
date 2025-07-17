@@ -1,23 +1,72 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Node.js
+node_modules/
+.npm/
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-
-# testing
-/coverage
-
-# production
-/build
-
-# misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-npm-debug.log*
+# Yarn
+.yarn/
+.yarnrc.yml
 yarn-debug.log*
 yarn-error.log*
+
+# pnpm
+.pnpm-debug.log*
+.pnpm-store/
+
+# Build output
+/build/
+/dist/
+/.next/
+.next/
+/out/
+
+# Test coverage
+/coverage/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+npm-debug.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor/IDE
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+*.code-workspace
+
+# Misc
+*.tgz
+*.log
+*.tmp
+*.bak
+*.orig
+
+# Personal/Project docs (isteğe bağlı, kaldırabilirsin)
+TODO.md
+SRS_Document.md
+
+# MacOS
+.AppleDouble
+.LSOverride
+Icon?
+
+# Windows
+$RECYCLE.BIN/
+*.lnk
+
+# Optional: ignore build artifacts from other tools
+*.tsbuildinfo
+
+# Optional: ignore local static assets
+/public/static/ 

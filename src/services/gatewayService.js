@@ -1,169 +1,440 @@
-// Gateway Service for AR.IO Gateway Explorer
-// Handles data fetching, processing, and statistics
+// Next Generation Gateway Data Service
+// Fetches data from ArioSDK and ipgeo API, returns data mapped and error-handled for frontend
 
-// Load gateway data from remote API (HTML içerebilir, JSON array'i arındır)
-const loadGatewayData = async () => {
+import { ARIO } from '@ar.io/sdk';
+
+const ario = ARIO.mainnet();
+
+// 2. Function to fetch GeoJSON data from ipgeo_gatewayexplorer.ar.io
+async function fetchIpGeoList() {
   try {
-    const response = await fetch('https://api_gatewayexplorer.ar.io/');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const text = await response.text();
-    // JSON array'i HTML'den arındır
-    const start = text.indexOf('[');
-    const end = text.lastIndexOf(']');
-    if (start === -1 || end === -1) throw new Error('No JSON array found in response');
-    const jsonString = text.slice(start, end + 1);
-    let data;
-    try {
-      data = JSON.parse(jsonString);
-    } catch (e) {
-      throw new Error('Failed to parse JSON array from response');
-    }
-    // Handle both old format (data.gateways) and new format (direct array)
-    const gateways = Array.isArray(data) ? data : (data.gateways || []);
-    // Transform new data structure to match our expected format
-    return gateways.map(gateway => ({
-      // Basic information
-      label: gateway.Label || gateway.label || 'Unknown',
-      address: gateway.Address || gateway.address || '',
-      domain: gateway.Address ? new URL(gateway.Address).hostname : (gateway.address ? new URL(gateway.address).hostname : ''),
-      
-      // Wallet information
-      wallet: gateway['Owner Wallet'] || gateway.wallet || '',
-      observerWallet: gateway['Observer Wallet'] || gateway.observerWallet || '',
-      propertiesId: gateway['Properties ID'] || gateway.propertiesId || '',
-      
-      // Status and health - Mark as unknown if info/healthcheck are null and status is joined
-      status: (() => {
-        // If info and healthcheck are null and status is joined, mark as unknown
-        if (gateway.Status === 'joined' && 
-            (gateway.info === null || gateway.info === undefined) && 
-            (gateway.healthcheck === null || gateway.healthcheck === undefined)) {
-          return 'unknown';
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000); // 4 sec timeout
+    const res = await fetch('https://ipgeo_gatewayexplorer.ar.io/', { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error('ipgeo API error');
+    const geojson = await res.json();
+    
+    // Create address-based mapping from GeoJSON
+    const addressMapping = {};
+    if (geojson.features && Array.isArray(geojson.features)) {
+      geojson.features.forEach(feature => {
+        if (feature.properties && feature.properties.address) {
+          addressMapping[feature.properties.address] = {
+            ip: feature.properties.ip,
+            isp: feature.properties.isp,
+            org: feature.properties.org,
+            city: feature.properties.city,
+            region: feature.properties.region,
+            country: feature.properties.country,
+            lat: feature.geometry.coordinates[1], // [lon, lat] format in GeoJSON
+            lon: feature.geometry.coordinates[0]
+          };
         }
-        
-        // Otherwise use existing logic
-        if (gateway.Status === 'joined') return 'ok';
-        if (gateway.Status === 'leaving') return 'offline';
-        return gateway.Status || gateway.status || 'unknown';
-      })(),
-      healthcheck: gateway.healthcheck || {},
-      
-      // Staking information
-      stake: parseInt(gateway['Minimum Delegated Stake (ARIO)'] || gateway.stake || '0'),
-      rewardAutoStake: gateway['Reward Auto Stake'] || gateway.rewardAutoStake || 'N/A',
-      delegatedStaking: gateway['Delegated Staking'] || gateway.delegatedStaking || 'N/A',
-      rewardShareRatio: gateway['Reward Share Ratio'] || gateway.rewardShareRatio || 'N/A',
-      minimumDelegatedStake: parseInt(gateway['Minimum Delegated Stake (ARIO)'] || gateway.minimumDelegatedStake || '0'),
-      
-      // Technical information
-      info: gateway.info || {},
-      
-      // Location and network information
-      ipgeo: gateway.ipgeo || {},
-      ip: gateway.ipgeo?.ip || gateway.ip || '',
-      latitude: gateway.ipgeo?.location?.latitude ? parseFloat(gateway.ipgeo.location.latitude) : (gateway.ipgeo?.lat || gateway.latitude || null),
-      longitude: gateway.ipgeo?.location?.longitude ? parseFloat(gateway.ipgeo.location.longitude) : (gateway.ipgeo?.lon || gateway.longitude || null),
-      country: gateway.ipgeo?.location?.country_name || gateway.ipgeo?.country || gateway.country || 'Unknown',
-      city: gateway.ipgeo?.location?.city || gateway.ipgeo?.city || gateway.city || 'Unknown',
-      state: gateway.ipgeo?.location?.state_prov || gateway.ipgeo?.regionName || gateway.ipgeo?.region || gateway.state || '',
-      region: gateway.ipgeo?.location?.state_prov || gateway.ipgeo?.regionName || gateway.ipgeo?.region || gateway.state || '',
-      isp: gateway.ipgeo?.location?.organization || gateway.ipgeo?.isp || gateway.ipgeo?.org || gateway.isp || 'Unknown',
-      
-      // Additional information
-      note: gateway.Note || gateway.note || '',
-      
-      // Legacy fields for compatibility
-      organization: gateway.ipgeo?.location?.organization || gateway.organization || 'Unknown',
-      responseTime: gateway['Response Time'] === 'Error' ? null : 
-                   (typeof gateway['Response Time'] === 'number' ? gateway['Response Time'] : 
-                    (gateway.responseTime || null)),
-      lastChecked: gateway.lastChecked || new Date().toISOString(),
-      uptimePercentage: gateway.uptimePercentage || 0,
-      
-      // Teknik bilgi içinde release ekle
-      release: gateway.info?.release || gateway.release || 'unknown',
-    }));
-  } catch (error) {
-    console.error('Error loading gateway data:', error);
-    throw new Error('Failed to load gateway data from remote API');
-  }
-};
-
-// Simulate health check for a gateway
-const checkGatewayHealth = async (domain) => {
-  // Simulate health check with random response times and occasional failures
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const isHealthy = Math.random() > 0.1; // 90% success rate
-      const responseTime = isHealthy ? Math.floor(Math.random() * 200) + 50 : null;
-      
-      resolve({
-        status: isHealthy ? 'ok' : 'offline',
-        responseTime: responseTime,
-        timestamp: new Date().toISOString()
       });
-    }, Math.random() * 1000 + 500); // Random delay between 500-1500ms
-  });
-};
-
-// Main function to get all gateways with enhanced data
-export const getGateways = async () => {
-  try {
-    console.log('Loading gateway data from remote API...');
+    }
     
-    // Load base gateway data with new structure
-    let gateways = await loadGatewayData();
-    
-    console.log(`Loaded ${gateways.length} gateways from API`);
-    
-    // Add computed fields and use real health data
-    gateways = gateways.map(gateway => ({
-      ...gateway,
-      // Add a unique ID if not present
-      id: gateway.address || `${gateway.domain}-${Date.now()}`,
-      // Ensure stake is a number
-      stake: typeof gateway.stake === 'string' ? parseInt(gateway.stake) : gateway.stake || 0,
-      // Use real status from healthcheck or fallback
-      status: gateway.healthcheck?.status || gateway.status || 'unknown',
-      // Use real uptime from healthcheck
-      uptimePercentage: gateway.healthcheck?.uptime ? 
-        Math.min(100, Math.max(0, (gateway.healthcheck.uptime / 3600) * 100)) : 
-        (gateway.status === 'ok' ? 98.5 + Math.random() * 1.5 : 
-         gateway.status === 'offline' ? 0 : 
-         Math.random() * 50 + 25),
-      // Use real last check time
-      lastChecked: gateway.healthcheck?.date || gateway.lastChecked || new Date().toISOString()
-    }));
-    
-    console.log(`Processed ${gateways.length} gateways successfully`);
-    return gateways;
-    
-  } catch (error) {
-    console.error('Error in getGateways:', error);
-    throw error;
+    return addressMapping;
+  } catch (err) {
+    console.error('ipgeo API error:', err);
+    // Fallback: return empty object
+    return {};
   }
-};
+}
 
-// Filter gateways based on various criteria
-export const filterGateways = (gateways, filters) => {
+// === HTTP STATUS CHECK FUNCTION ===
+function determineStatusFromHttpResponse(response, error) {
+  if (error) {
+    // Network error or timeout
+    if (error.name === 'AbortError') {
+      return { status: 'timeout', httpStatus: 'timeout' };
+    }
+    if (error.message && error.message.includes('SSL')) {
+      return { status: 'ssl_error', httpStatus: 'ssl_error' };
+    }
+    if (error.message && error.message.includes('fetch')) {
+      return { status: 'offline', httpStatus: 'network_error' };
+    }
+    return { status: 'offline', httpStatus: 'network_error' };
+  }
+  
+  if (!response) {
+    return { status: 'unknown', httpStatus: 'no_response' };
+  }
+  
+  const status = response.status;
+  
+  if (status === 200) {
+    return { status: 'ok', httpStatus: 200 };
+  } else if ([503, 504].includes(status)) {
+    return { status: 'offline', httpStatus: status };
+  } else if ([300, 301, 302, 303, 304, 305, 306, 307, 308].includes(status)) {
+    return { status: 'offline', httpStatus: status };
+  } else if (status >= 400 && status < 500) {
+    return { status: 'offline', httpStatus: status };
+  } else if (status >= 500) {
+    return { status: 'offline', httpStatus: status };
+  } else {
+    return { status: 'unknown', httpStatus: status };
+  }
+}
+
+// === TRANSFORMATION FUNCTION ===
+function transformArioToFrontendFormat(gw, ipgeo = {}, info = {}, address = '', healthcheck = {}) {
+  // Status mapping - determined by HTTP status codes
+  let status = 'unknown';
+  
+  // First, check the contract status of the gateway
+  if (gw.status === 'leaving') {
+    status = 'offline'; // Leaving gateways are definitely offline
+  } else if (gw.status === 'joined') {
+    // For joined gateways, check HTTP status
+    if (info && info.httpStatus) {
+      if (info.httpStatus === 200) {
+        status = 'ok'; // 200 = online
+      } else if ([503, 504, 300, 301, 302, 303, 304, 305, 306, 307, 308].includes(info.httpStatus)) {
+        status = 'offline'; // These status codes are offline
+      } else if (info.httpStatus === 'ssl_error') {
+        status = 'unknown'; // SSL/TLS error → unknown
+      } else if (info.httpStatus === 'timeout') {
+        status = 'unknown'; // Timeout error → unknown
+      } else {
+        status = 'unknown'; // Other cases unknown
+      }
+    } else if (healthcheck && healthcheck.httpStatus) {
+      // If no info, check healthcheck
+      if (healthcheck.httpStatus === 200) {
+        status = 'ok';
+      } else if ([503, 504, 300, 301, 302, 303, 304, 305, 306, 307, 308].includes(healthcheck.httpStatus)) {
+        status = 'offline';
+      } else if (healthcheck.httpStatus === 'ssl_error') {
+        status = 'unknown'; // SSL/TLS error → unknown
+      } else if (healthcheck.httpStatus === 'timeout') {
+        status = 'unknown'; // Timeout error → unknown
+      } else {
+        status = 'unknown';
+      }
+    } else {
+      // If no HTTP status at all, check if address exists
+      if (address) {
+        status = 'unknown'; // Address exists but no response
+      } else {
+        status = 'offline'; // Not even address, so offline
+      }
+    }
+  } else if (gw.status) {
+    status = gw.status; // For other cases, use current status
+  }
+
+  // Debug log - track status changes
+  if (address && status !== 'ok') {
+    console.log(`[STATUS][${status}] ${address} - info:`, info?.httpStatus, 'healthcheck:', healthcheck?.httpStatus);
+  }
+
+  // Release info is taken from info, check alternatives
+  let release = 'unknown';
+  if (info && info.release) release = info.release;
+  else if (info && info.version) release = info.version;
+  else if (info && Array.isArray(info.supportedManifestVersions) && info.supportedManifestVersions.length > 0) release = info.supportedManifestVersions[0];
+  else if (gw.info && gw.info.release) release = gw.info.release;
+  else if (gw.release) release = gw.release;
+  if (release === 'unknown') {
+    console.warn(`[RELEASE][UNKNOWN] ${address} - info:`, info);
+  }
+
+  return {
+    label: gw.settings?.label || 'Unknown',
+    address: gw.settings ? buildAddress(gw.settings) : '',
+    wallet: gw.gatewayAddress || '',
+    observerWallet: gw.observerAddress || '',
+    propertiesId: gw.settings?.properties || '',
+    status,
+    note: gw.settings?.note || '',
+    rewardAutoStake: boolToEnabledDisabled(gw.settings?.autoStake ?? false),
+    delegatedStaking: boolToEnabledDisabled(gw.settings?.allowDelegatedStaking ?? false),
+    rewardShareRatio: formatRewardShareRatio(gw.settings?.delegateRewardShareRatio ?? 0),
+    minimumDelegatedStake: formatMinDelegatedStake(gw.settings?.minDelegatedStake ?? 0),
+    ip: ipgeo.ip || '',
+    country: ipgeo.country || '',
+    city: ipgeo.city || '',
+    region: ipgeo.region || '',
+    isp: ipgeo.isp || '',
+    org: ipgeo.org || '',
+    lat: ipgeo.lat || null,
+    lon: ipgeo.lon || null,
+    release,
+  };
+}
+
+// === TRANSFORMATION FUNCTIONS ===
+function buildAddress(settings) {
+  return `${settings.protocol}://${settings.fqdn}:${settings.port}`;
+}
+
+function boolToEnabledDisabled(val) {
+  return val ? "Enabled" : "Disabled";
+}
+
+function formatMinDelegatedStake(val) {
+  if (!val || val === 0) return '0';
+  // Return as is, will be formatted in frontend
+  return val.toString();
+}
+
+function formatRewardShareRatio(val) {
+  return `${val}%`;
+}
+
+// === CACHE AND TIMEOUT SETTINGS ===
+const infoCache = new Map();
+const healthcheckCache = new Map();
+const INFO_TIMEOUT = 10000;
+const HEALTHCHECK_TIMEOUT = 10000;
+const CACHE_DURATION = 30 * 60 * 1000; // 30 min cache (reduced from 1 day)
+const MAX_RETRIES = 3;
+
+// === GATEWAY INFO FETCH FUNCTION ===
+export async function fetchGatewayInfo(address) {
+  const cached = infoCache.get(address);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    console.log(`[INFO][CACHE] ${address}`);
+    return cached.data;
+  }
+  
+  let lastError = null;
+  
+  // Retry mechanism
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), INFO_TIMEOUT);
+      const response = await fetch(`${address}/ar-io/info`, { signal: controller.signal });
+      clearTimeout(timeout);
+      
+      if (response.ok) {
+        const data = await response.json();
+        const result = { ...data, httpStatus: 200 };
+        infoCache.set(address, { data: result, timestamp: Date.now() });
+        console.log(`[INFO][FETCHED] ${address} release: ${data.release} status: 200`);
+        return result;
+      } else {
+        // HTTP status error - no need to retry
+        const statusResult = determineStatusFromHttpResponse(response, null);
+        const result = { release: 'unknown', ...statusResult };
+        infoCache.set(address, { data: result, timestamp: Date.now() });
+        console.log(`[INFO][HTTP_ERROR] ${address} status: ${response.status}`);
+        return result;
+      }
+    } catch (err) {
+      lastError = err;
+      console.error(`[INFO][ERROR] ${address} attempt ${attempt + 1}:`, err);
+      
+      // SSL/TLS error check - no need to retry
+      if (err.message && (err.message.includes('SSL') || err.message.includes('TLS') || err.message.includes('certificate'))) {
+        const result = { release: 'unknown', status: 'unknown', httpStatus: 'ssl_error' };
+        infoCache.set(address, { data: result, timestamp: Date.now() });
+        return result;
+      }
+      
+      // If not last attempt, continue
+      if (attempt < MAX_RETRIES) {
+        console.log(`[INFO][RETRY] ${address} attempt ${attempt + 1} failed, retrying...`);
+        continue;
+      }
+    }
+  }
+  
+  // All attempts failed
+  if (lastError) {
+    // Timeout check
+    if (lastError.name === 'AbortError') {
+      const result = { release: 'unknown', status: 'unknown', httpStatus: 'timeout' };
+      infoCache.set(address, { data: result, timestamp: Date.now() });
+      return result;
+    }
+    
+    // Other network errors
+    const result = { release: 'unknown', status: 'offline', httpStatus: 'network_error' };
+    infoCache.set(address, { data: result, timestamp: Date.now() });
+    return result;
+  }
+}
+
+// === GATEWAY HEALTHCHECK FETCH FUNCTION ===
+export async function fetchGatewayHealthcheck(address) {
+  const cached = healthcheckCache.get(address);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  
+  let lastError = null;
+  
+  // Retry mechanism
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), HEALTHCHECK_TIMEOUT);
+      const response = await fetch(`${address}/ar-io/healthcheck`, { signal: controller.signal });
+      clearTimeout(timeout);
+      
+      if (response.ok) {
+        const data = await response.json();
+        const result = { ...data, httpStatus: 200 };
+        healthcheckCache.set(address, { data: result, timestamp: Date.now() });
+        console.log(`[HEALTHCHECK][FETCHED] ${address} status: 200`);
+        return result;
+      } else {
+        // HTTP status error - no need to retry
+        const statusResult = determineStatusFromHttpResponse(response, null);
+        const result = { status: 'unknown', ...statusResult };
+        healthcheckCache.set(address, { data: result, timestamp: Date.now() });
+        console.log(`[HEALTHCHECK][HTTP_ERROR] ${address} status: ${response.status}`);
+        return result;
+      }
+    } catch (err) {
+      lastError = err;
+      console.error(`[HEALTHCHECK][ERROR] ${address} attempt ${attempt + 1}:`, err);
+      
+      // SSL/TLS error check - no need to retry
+      if (err.message && (err.message.includes('SSL') || err.message.includes('TLS') || err.message.includes('certificate'))) {
+        const result = { status: 'unknown', httpStatus: 'ssl_error' };
+        healthcheckCache.set(address, { data: result, timestamp: Date.now() });
+        return result;
+      }
+      
+      // If not last attempt, continue
+      if (attempt < MAX_RETRIES) {
+        console.log(`[HEALTHCHECK][RETRY] ${address} attempt ${attempt + 1} failed, retrying...`);
+        continue;
+      }
+    }
+  }
+  
+  // All attempts failed
+  if (lastError) {
+    // Timeout check
+    if (lastError.name === 'AbortError') {
+      const result = { status: 'unknown', httpStatus: 'timeout' };
+      healthcheckCache.set(address, { data: result, timestamp: Date.now() });
+      return result;
+    }
+    
+    // Other network errors
+    const result = { status: 'offline', httpStatus: 'network_error' };
+    healthcheckCache.set(address, { data: result, timestamp: Date.now() });
+    return result;
+  }
+}
+
+// === MAIN DATA FETCH FUNCTION ===
+export async function getAllGatewayDataV2(options = {}) {
+  const { onStep, onProgress } = options;
+  let gateways = [];
+  let ipgeoList = [];
+  const releaseLog = [];
+  
+  try {
+    if (onStep) onStep('Fetching gateway list...');
+    if (onProgress) onProgress(5);
+    
+    // First, fetch the first page to get totalItems
+    const firstPage = await ario.getGateways();
+    const total = firstPage.totalItems || (firstPage.items ? firstPage.items.length : 0);
+    let allItems = firstPage.items || [];
+    
+    if (total > allItems.length) {
+      if (onStep) onStep('Fetching all gateways...');
+      if (onProgress) onProgress(10);
+      const allPage = await ario.getGateways({ limit: total });
+      allItems = allPage.items || [];
+    }
+    
+    gateways = allItems;
+    
+    if (onStep) onStep('Fetching geolocation data...');
+    if (onProgress) onProgress(15);
+    ipgeoList = await fetchIpGeoList();
+    
+    if (onStep) onStep('Checking gateway status...');
+    if (onProgress) onProgress(20);
+  } catch (err) {
+    console.error('Gateway or ipgeo data could not be fetched:', err);
+    gateways = gateways || [];
+    ipgeoList = ipgeoList || [];
+  }
+
+  // Calculate progress based on number of joined gateways
+  const joinedGateways = gateways.filter(gw => gw.status === 'joined');
+  const totalToCheck = joinedGateways.length;
+  let checkedCount = 0;
+
+  // Progress callback function
+  const updateProgress = () => {
+    checkedCount++;
+    const progress = 20 + Math.floor((checkedCount / totalToCheck) * 75); // 20% - 95% range
+    if (onProgress) onProgress(progress);
+    if (onStep) onStep(`Checking gateway ${checkedCount}/${totalToCheck}...`);
+  };
+
+  // Only fetch info and healthcheck for status 'joined'
+  const infoPromises = gateways.map(async (gw, idx) => {
+    let address = '';
+    try {
+      address = gw.settings ? buildAddress(gw.settings) : '';
+    } catch (e) {
+      address = '';
+    }
+    
+    let info = null;
+    let healthcheck = null;
+    
+    if (address && gw.status === 'joined') {
+      info = await fetchGatewayInfo(address);
+      healthcheck = await fetchGatewayHealthcheck(address);
+      updateProgress(); // Update progress after each gateway check
+    }
+    
+    const ipgeo = ipgeoList[address] || {};
+    
+    const mapped = transformArioToFrontendFormat(gw, ipgeo, info, address, healthcheck);
+    releaseLog.push(`${address} => ${mapped.release}`);
+    return mapped;
+  });
+
+  const result = await Promise.all(infoPromises);
+  if (onStep) onStep('Finalizing...');
+  if (onProgress) onProgress(100);
+  
+  // Log status statistics
+  const statusCounts = result.reduce((acc, gw) => {
+    acc[gw.status] = (acc[gw.status] || 0) + 1;
+    return acc;
+  }, {});
+  console.log('STATUS DISTRIBUTION:', statusCounts);
+  console.log('RELEASE LOG:', releaseLog);
+  
+  return result;
+}
+
+// === FILTER FUNCTION ===
+export function filterGateways(gateways, filters) {
   if (!gateways || !Array.isArray(gateways)) {
     return [];
   }
 
   return gateways.filter(gateway => {
-    // Search filter (domain, label, city, country)
+    // Search filter (domain, label, city, country, isp, org)
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
       const searchableText = [
-        gateway.domain,
+        gateway.address,
         gateway.label,
         gateway.city,
         gateway.country,
-        gateway.organization
+        gateway.region,
+        gateway.isp,
+        gateway.org
       ].filter(Boolean).join(' ').toLowerCase();
-      
       if (!searchableText.includes(searchTerm)) {
         return false;
       }
@@ -187,24 +458,22 @@ export const filterGateways = (gateways, filters) => {
     // Stake range filter
     if (filters.minStake) {
       const minStake = parseInt(filters.minStake);
-      if (!gateway.stake || gateway.stake < minStake) {
+      if (!gateway.minimumDelegatedStake || parseInt(gateway.minimumDelegatedStake) < minStake) {
         return false;
       }
     }
-
     if (filters.maxStake) {
       const maxStake = parseInt(filters.maxStake);
-      if (!gateway.stake || gateway.stake > maxStake) {
+      if (!gateway.minimumDelegatedStake || parseInt(gateway.minimumDelegatedStake) > maxStake) {
         return false;
       }
     }
-
     return true;
   });
-};
+}
 
-// Calculate comprehensive statistics
-export const getGatewayStatistics = (gateways) => {
+// === STATISTICS FUNCTION ===
+export function getGatewayStatistics(gateways) {
   if (!gateways || gateways.length === 0) {
     return {
       total: 0,
@@ -229,20 +498,9 @@ export const getGatewayStatistics = (gateways) => {
     online: gateways.filter(g => g.status === 'ok').length,
     offline: gateways.filter(g => g.status === 'offline').length,
     unknown: gateways.filter(g => g.status === 'unknown').length,
-    totalStake: gateways.reduce((sum, g) => sum + (g.stake || 0), 0),
+    totalStake: gateways.reduce((sum, g) => sum + (parseInt(g.minimumDelegatedStake) || 0), 0),
     countries: [...new Set(gateways.map(g => g.country))].filter(Boolean).length
   };
-
-  // Calculate average response time (only for gateways with valid response times, exclude "Error")
-  const validResponseTimeGateways = gateways.filter(g => 
-    g.responseTime !== null && 
-    g.responseTime !== undefined && 
-    typeof g.responseTime === 'number' && 
-    g.responseTime > 0
-  );
-  stats.avgResponseTime = validResponseTimeGateways.length > 0 
-    ? validResponseTimeGateways.reduce((sum, g) => sum + g.responseTime, 0) / validResponseTimeGateways.length
-    : 0;
 
   // Status distribution
   stats.statusStats = {
@@ -258,9 +516,9 @@ export const getGatewayStatistics = (gateways) => {
     return acc;
   }, {});
 
-  // Region distribution (just region/state names)
+  // Region distribution
   stats.regionStats = gateways.reduce((acc, gateway) => {
-    const region = gateway.region || gateway.state || 'Unknown';
+    const region = gateway.region || 'Unknown';
     acc[region] = (acc[region] || 0) + 1;
     return acc;
   }, {});
@@ -274,7 +532,7 @@ export const getGatewayStatistics = (gateways) => {
 
   // Release distribution
   stats.releaseStats = gateways.reduce((acc, gateway) => {
-    const release = gateway.release || gateway.info?.release || 'unknown';
+    const release = gateway.release || 'unknown';
     acc[release] = (acc[release] || 0) + 1;
     return acc;
   }, {});
@@ -288,325 +546,64 @@ export const getGatewayStatistics = (gateways) => {
 
   // Stake distribution by ranges
   stats.stakeStats = gateways.reduce((acc, gateway) => {
-    const stake = gateway.stake || 0;
+    const stake = parseInt(gateway.minimumDelegatedStake) || 0;
     let range;
-    
     if (stake >= 1000000) range = '1M+ ARIO';
     else if (stake >= 500000) range = '500K-1M ARIO';
     else if (stake >= 100000) range = '100K-500K ARIO';
     else if (stake >= 50000) range = '50K-100K ARIO';
     else if (stake >= 10000) range = '10K-50K ARIO';
     else range = 'Under 10K ARIO';
-    
     acc[range] = (acc[range] || 0) + 1;
     return acc;
   }, {});
 
-  // Calculate Enhanced Decentralization Index
-  const uniqueWallets = [...new Set(gateways.map(g => g.wallet))].filter(Boolean).length;
-  const uniqueCountries = [...new Set(gateways.map(g => g.country))].filter(Boolean).length;
-  const uniqueRegions = [...new Set(gateways.map(g => g.region || g.state))].filter(Boolean).length;
-  const uniqueCities = [...new Set(gateways.map(g => g.city))].filter(Boolean).length;
-  const uniqueISPs = [...new Set(gateways.map(g => g.isp))].filter(Boolean).length;
-  
-  // Enhanced weights for comprehensive decentralization formula
-  const w1 = 0.20; // Country diversity weight
-  const w2 = 0.15; // Region diversity weight  
-  const w3 = 0.15; // City diversity weight
-  const w4 = 0.20; // ISP diversity weight
-  const w5 = 0.15; // Gateway health weight
-  const w6 = 0.15; // Stake distribution weight
-  
-  // Calculate normalized ratios
-  const countryRatio = uniqueCountries / stats.total;
-  const regionRatio = uniqueRegions / stats.total;
-  const cityRatio = uniqueCities / stats.total;
-  const ispRatio = uniqueISPs / stats.total;
-  const healthRatio = stats.online / stats.total; // Online gateway percentage
-  
-  // Calculate stake distribution (1 - concentration ratio)
-  // Higher average stake per gateway means more concentrated, so we invert it
-  const avgStakePerGateway = stats.totalStake / stats.total;
-  const stakeDistributionRatio = stats.totalStake > 0 ? 
-    Math.min(1, 1 - (avgStakePerGateway / stats.totalStake)) : 0.5;
-  
-  // Calculate comprehensive decentralization index (0-1)
-  stats.decentralizationScore = 
-    w1 * countryRatio +
-    w2 * regionRatio + 
-    w3 * cityRatio +
-    w4 * ispRatio +
-    w5 * healthRatio +
-    w6 * stakeDistributionRatio;
-  
-  // Store individual counts and metrics for display
-  stats.uniqueWallets = uniqueWallets;
-  stats.uniqueCountries = uniqueCountries;
-  stats.uniqueRegions = uniqueRegions;
-  stats.uniqueCities = uniqueCities;
-  stats.uniqueISPs = uniqueISPs;
-  stats.avgStakePerGateway = avgStakePerGateway;
-
-  // Calculate Nakamoto Coefficients
-  stats.nakamotoCoefficient = calculateNakamotoCoefficients(gateways);
-
   return stats;
-};
+}
 
-// Get gateway details by address or domain
-export const getGatewayDetails = async (identifier) => {
-  try {
-    const gateways = await getGateways();
-    return gateways.find(g => 
-      g.address === identifier || 
-      g.domain === identifier
-    );
-  } catch (error) {
-    console.error('Error getting gateway details:', error);
-    return null;
+// === GATEWAY SERVICE CLASS ===
+export class GatewayService {
+  constructor() {
+    this.cache = new Map();
+    this.cacheTimeout = 30 * 60 * 1000; // 30 min cache (increased from 5 min)
   }
-};
 
-// Export utility functions
-export const formatStake = (stake) => {
-  if (!stake) return '0 ARIO';
-  
-  if (stake >= 1000000) {
-    return `${(stake / 1000000).toFixed(1)}M ARIO`;
-  } else if (stake >= 1000) {
-    return `${(stake / 1000).toFixed(1)}K ARIO`;
-  }
-  return `${stake.toLocaleString()} ARIO`;
-};
-
-export const formatResponseTime = (responseTime) => {
-  if (!responseTime) return 'N/A';
-  return `${responseTime}ms`;
-};
-
-export const getStatusColor = (status) => {
-  switch (status) {
-    case 'ok':
-    case 'online': return '#4caf50';
-    case 'offline': return '#f44336';
-    case 'unknown': return '#ff9800';
-    default: return '#757575';
-  }
-};
-
-// Nakamoto Coefficient Calculation Functions
-export const calculateNakamotoCoefficients = (gateways) => {
-  if (!gateways || gateways.length === 0) {
-    return {
-      ownerWalletCoeff: 0,
-      stakeCoeff: 0,
-      countryCoeff: 0,
-      ispCoeff: 0,
-      analysis: {
-        totalGateways: 0,
-        uniqueOwners: 0,
-        totalStake: 0,
-        interpretation: 'No data available'
+  /**
+   * Fetches all gateways from AR.IO contract. First gets the first page, learns totalItems, then calls again with limit=totalItems.
+   */
+  async getGateways() {
+    const cacheKey = 'rawGateways';
+    const cached = this.cache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+      console.log('Using cache.');
+      return cached.data;
+    }
+    try {
+      // First, get the first page (default limit)
+      const firstPage = await ario.getGateways();
+      const total = firstPage.totalItems || (firstPage.items ? firstPage.items.length : 0);
+      // If all are already fetched, no need to call again
+      if (!total || total <= (firstPage.items?.length || 0)) {
+        this.cache.set(cacheKey, {
+          data: firstPage,
+          timestamp: Date.now(),
+        });
+        return firstPage;
       }
-    };
-  }
-
-  // 1. Owner Wallet Based Nakamoto Coefficient
-  const ownerWalletCoeff = calculateOwnerWalletNakamoto(gateways);
-  
-  // 2. Stake Distribution Based Nakamoto Coefficient  
-  const stakeCoeff = calculateStakeNakamoto(gateways);
-  
-  // 3. Country Distribution Based Nakamoto Coefficient
-  const countryCoeff = calculateCountryNakamoto(gateways);
-  
-  // 4. ISP Distribution Based Nakamoto Coefficient
-  const ispCoeff = calculateISPNakamoto(gateways);
-
-  // Analysis and interpretation
-  const analysis = {
-    totalGateways: gateways.length,
-    uniqueOwners: [...new Set(gateways.map(g => g.wallet || g.ownerWallet))].filter(Boolean).length,
-    totalStake: gateways.reduce((sum, g) => sum + (g.stake || 0), 0),
-    interpretation: interpretNakamotoResults({
-      owner: ownerWalletCoeff,
-      stake: stakeCoeff,
-      country: countryCoeff,
-      isp: ispCoeff
-    }, gateways.length)
-  };
-
-  return {
-    ownerWalletCoeff,
-    stakeCoeff,
-    countryCoeff,
-    ispCoeff,
-    analysis
-  };
-};
-
-// Owner Wallet based Nakamoto Coefficient
-const calculateOwnerWalletNakamoto = (gateways) => {
-  const walletCounts = {};
-  
-  gateways.forEach(gateway => {
-    const wallet = gateway.wallet || gateway.ownerWallet || 'unknown';
-    walletCounts[wallet] = (walletCounts[wallet] || 0) + 1;
-  });
-
-  // Sort by gateway count (descending)
-  const sortedWallets = Object.entries(walletCounts)
-    .sort(([,a], [,b]) => b - a);
-
-  const totalGateways = gateways.length;
-  const threshold = Math.ceil(totalGateways * 0.51); // 51% threshold for majority control
-
-  let cumulativeCount = 0;
-  let nakamotoCoeff = 0;
-
-  for (const [wallet, count] of sortedWallets) {
-    cumulativeCount += count;
-    nakamotoCoeff += 1;
-    if (cumulativeCount >= threshold) {
-      break;
+      // To fetch all gateways, call again with limit=total
+      const allGateways = await ario.getGateways({ limit: total });
+      this.cache.set(cacheKey, {
+        data: allGateways,
+        timestamp: Date.now(),
+      });
+      return allGateways;
+    } catch (error) {
+      console.error('getGateways error:', error);
+      if (cached) {
+        console.warn('Returning old cache due to error.');
+        return cached.data;
+      }
+      throw new Error('Could not fetch gateways from AR.IO contract.');
     }
   }
-
-  return nakamotoCoeff;
-};
-
-// Stake Distribution based Nakamoto Coefficient
-const calculateStakeNakamoto = (gateways) => {
-  const totalStake = gateways.reduce((sum, g) => sum + (g.stake || 0), 0);
-  
-  if (totalStake === 0) return 0;
-
-  // Sort by stake amount (descending)
-  const sortedByStake = gateways
-    .filter(g => g.stake > 0)
-    .sort((a, b) => (b.stake || 0) - (a.stake || 0));
-
-  const threshold = totalStake * 0.3333; // 33.33% threshold for PoS networks
-
-  let cumulativeStake = 0;
-  let nakamotoCoeff = 0;
-
-  for (const gateway of sortedByStake) {
-    cumulativeStake += gateway.stake || 0;
-    nakamotoCoeff += 1;
-    if (cumulativeStake >= threshold) {
-      break;
-    }
-  }
-
-  return nakamotoCoeff;
-};
-
-// Country Distribution based Nakamoto Coefficient
-const calculateCountryNakamoto = (gateways) => {
-  const countryCounts = {};
-  
-  gateways.forEach(gateway => {
-    const country = gateway.country || 'Unknown';
-    countryCounts[country] = (countryCounts[country] || 0) + 1;
-  });
-
-  // Sort by gateway count (descending)
-  const sortedCountries = Object.entries(countryCounts)
-    .sort(([,a], [,b]) => b - a);
-
-  const totalGateways = gateways.length;
-  const threshold = Math.ceil(totalGateways * 0.51); // 51% threshold
-
-  let cumulativeCount = 0;
-  let nakamotoCoeff = 0;
-
-  for (const [country, count] of sortedCountries) {
-    cumulativeCount += count;
-    nakamotoCoeff += 1;
-    if (cumulativeCount >= threshold) {
-      break;
-    }
-  }
-
-  return nakamotoCoeff;
-};
-
-// ISP Distribution based Nakamoto Coefficient
-const calculateISPNakamoto = (gateways) => {
-  const ispCounts = {};
-  
-  gateways.forEach(gateway => {
-    const isp = gateway.isp || 'Unknown ISP';
-    ispCounts[isp] = (ispCounts[isp] || 0) + 1;
-  });
-
-  // Sort by gateway count (descending)
-  const sortedISPs = Object.entries(ispCounts)
-    .sort(([,a], [,b]) => b - a);
-
-  const totalGateways = gateways.length;
-  const threshold = Math.ceil(totalGateways * 0.51); // 51% threshold
-
-  let cumulativeCount = 0;
-  let nakamotoCoeff = 0;
-
-  for (const [isp, count] of sortedISPs) {
-    cumulativeCount += count;
-    nakamotoCoeff += 1;
-    if (cumulativeCount >= threshold) {
-      break;
-    }
-  }
-
-  return nakamotoCoeff;
-};
-
-// Interpret Nakamoto Coefficient Results
-const interpretNakamotoResults = (coefficients, totalGateways) => {
-  const { owner, stake, country, isp } = coefficients;
-  
-  // Calculate average coefficient for overall assessment
-  const avgCoeff = (owner + stake + country + isp) / 4;
-  const gatewayPercent = (avgCoeff / totalGateways) * 100;
-
-  if (avgCoeff <= 3) {
-    return 'High Centralization Risk - Network control concentrated in very few entities';
-  } else if (avgCoeff <= 10) {
-    return 'Medium Centralization Risk - Concerning concentration levels';
-  } else if (avgCoeff <= 25) {
-    return 'Low Centralization Risk - Reasonable distribution levels';
-  } else if (gatewayPercent >= 15) {
-    return 'Good Decentralization - Control widely distributed';
-  } else {
-    return 'Excellent Decentralization - Very well distributed control structure';
-  }
-};
-
-// Get Nakamoto Coefficient Color for UI
-export const getNakamotoColor = (coefficient, totalGateways) => {
-  const percentage = (coefficient / totalGateways) * 100;
-  
-  if (coefficient <= 3) {
-    return 'var(--danger)';
-  } else if (coefficient <= 10) {
-    return 'var(--warning)';
-  } else if (percentage >= 15) {
-    return 'var(--success)';
-  } else {
-    return 'var(--primary)';
-  }
-};
-
-// Default export
-export default {
-  getGateways,
-  filterGateways,
-  getGatewayStatistics,
-  getGatewayDetails,
-  formatStake,
-  formatResponseTime,
-  getStatusColor,
-  calculateNakamotoCoefficients,
-  getNakamotoColor
-};
+} 

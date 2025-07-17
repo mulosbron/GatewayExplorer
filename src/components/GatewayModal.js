@@ -52,9 +52,27 @@ const formatDate = (dateString) => {
 export default function GatewayModal({ gateway, open, onClose }) {
   if (!gateway) return null;
 
+  // Debug: Gateway verisini console'a yazdır
+  console.log('Gateway Modal Data:', gateway);
+
   // Status badge rengi
   const statusColor = gateway.status === 'ok' ? '#10B981' : gateway.status === 'offline' ? '#EF4444' : '#ff9800';
-  const statusText = gateway.status === 'ok' ? 'Online' : gateway.status === 'offline' ? 'Offline' : 'Unknown';
+  const statusText = gateway.status === 'ok' ? 'Online' : 
+                    gateway.status === 'offline' ? 'Offline' : 'Unknown';
+
+  // Domain'i address'ten çıkar
+  const getDomain = () => {
+    if (gateway.address) {
+      try {
+        const url = new URL(gateway.address);
+        return url.hostname;
+      } catch {
+        // URL parse edilemezse, address'i olduğu gibi göster
+        return gateway.address;
+      }
+    }
+    return 'N/A';
+  };
 
   return (
     <dialog open={open} className="gateway-modal-card" onClose={onClose}>
@@ -63,8 +81,12 @@ export default function GatewayModal({ gateway, open, onClose }) {
         <div className="modal-card-header">
           <span className="modal-status-dot" style={{ background: statusColor }} />
           <div>
-            <div className="modal-card-title">{formatValue(gateway.label || gateway.Label)}</div>
-            <div className="modal-card-domain">{formatValue(gateway.domain || (gateway.address || gateway.Address ? new URL(gateway.address || gateway.Address).hostname : ''))}</div>
+            <div className="modal-card-title">
+              {gateway.label && gateway.label.trim() ? gateway.label : getDomain()}
+            </div>
+            <div className="modal-card-domain">
+              {gateway.label && gateway.label.trim() ? getDomain() : ''}
+            </div>
           </div>
           <button className="modal-card-close" aria-label="Close" onClick={onClose}>&times;</button>
         </div>
@@ -78,11 +100,11 @@ export default function GatewayModal({ gateway, open, onClose }) {
           </div>
           <div>
             <div className="modal-card-label">Uptime</div>
-            <div className="modal-card-value">{gateway.healthcheck?.uptime ? Math.round(gateway.healthcheck.uptime / 3600) + 'h' : 'N/A'}</div>
+            <div className="modal-card-value">N/A</div>
           </div>
           <div>
             <div className="modal-card-label">Release</div>
-            <div className="modal-card-value">{formatValue(gateway.info?.release || gateway.release)}</div>
+            <div className="modal-card-value">{formatValue(gateway.release)}</div>
           </div>
         </div>
 
@@ -90,8 +112,8 @@ export default function GatewayModal({ gateway, open, onClose }) {
         <div className="modal-card-stake">
           <span className="modal-card-label">Minimum Delegated Stake</span>
           <span className="modal-card-value" style={{ fontWeight: 700, fontSize: '1.2em' }}>
-            {gateway.minimumDelegatedStake || gateway['Minimum Delegated Stake (ARIO)'] ? 
-              (gateway.minimumDelegatedStake || gateway['Minimum Delegated Stake (ARIO)']).toLocaleString() + ' ARIO' : 'N/A'}
+            {gateway.minimumDelegatedStake ? 
+              gateway.minimumDelegatedStake + ' ARIO' : 'N/A'}
           </span>
         </div>
 
@@ -100,20 +122,22 @@ export default function GatewayModal({ gateway, open, onClose }) {
           <div>
             <div className="modal-card-label">Location</div>
             <div className="modal-card-value">
-              {formatValue(gateway.ipgeo?.city || gateway.city)}, {formatValue(gateway.ipgeo?.region || gateway.state)}
+              {gateway.city && gateway.region ? `${gateway.city}, ${gateway.region}` : 
+               gateway.city ? gateway.city : 
+               gateway.region ? gateway.region : 'N/A'}
             </div>
           </div>
           <div>
             <div className="modal-card-label">Country</div>
-            <div className="modal-card-value">{formatValue(gateway.ipgeo?.country || gateway.country)}</div>
+            <div className="modal-card-value">{formatValue(gateway.country)}</div>
           </div>
           <div>
             <div className="modal-card-label">ISP</div>
-            <div className="modal-card-value">{formatValue(gateway.ipgeo?.isp || gateway.isp)}</div>
+            <div className="modal-card-value">{formatValue(gateway.isp)}</div>
           </div>
           <div>
             <div className="modal-card-label">Organization</div>
-            <div className="modal-card-value">{formatValue(gateway.ipgeo?.org)}</div>
+            <div className="modal-card-value">{formatValue(gateway.org)}</div>
           </div>
         </div>
 
@@ -121,32 +145,34 @@ export default function GatewayModal({ gateway, open, onClose }) {
         <div className="modal-card-box">
           <div className="modal-card-box-title">Gateway Details</div>
           <div className="modal-card-box-grid">
-            <div><span className="modal-card-label">Address:</span> <CopyableValue value={gateway.address || gateway.Address} /></div>
+            <div><span className="modal-card-label">Address:</span> <CopyableValue value={gateway.address} /></div>
             <div><span className="modal-card-label">Owner Wallet: </span> 
               <CopyableValue 
-                value={gateway.wallet || gateway['Owner Wallet']} 
-                displayValue={formatShort(gateway.wallet || gateway['Owner Wallet'])}
+                value={gateway.wallet} 
+                displayValue={formatShort(gateway.wallet)}
               />
             </div>
             <div><span className="modal-card-label">Observer Wallet: </span> 
               <CopyableValue 
-                value={gateway.observerWallet || gateway['Observer Wallet']} 
-                displayValue={formatShort(gateway.observerWallet || gateway['Observer Wallet'])}
+                value={gateway.observerWallet} 
+                displayValue={formatShort(gateway.observerWallet)}
               />
             </div>
             <div><span className="modal-card-label">Properties ID: </span> 
               <CopyableValue 
-                value={gateway.propertiesId || gateway['Properties ID']} 
-                displayValue={formatShort(gateway.propertiesId || gateway['Properties ID'], 6)}
+                value={gateway.propertiesId} 
+                displayValue={formatShort(gateway.propertiesId, 6)}
               />
             </div>
             <div><span className="modal-card-label">Process ID: </span> 
               <CopyableValue 
-                value={gateway.info?.processId} 
-                displayValue={formatShort(gateway.info?.processId, 6)}
+                value="N/A" 
+                displayValue="N/A"
               />
             </div>
-            <div><span className="modal-card-label">Note:</span> <span className="modal-card-value">{formatValue(gateway.note || gateway.Note)}</span></div>
+            <div><span className="modal-card-label">Note:</span> <span className="modal-card-value">
+              {gateway.note && gateway.note.trim() ? gateway.note : 'N/A'}
+            </span></div>
           </div>
         </div>
 
@@ -159,11 +185,11 @@ export default function GatewayModal({ gateway, open, onClose }) {
               <span 
                 className="modal-card-value" 
                 style={{ 
-                  color: (gateway.rewardAutoStake || gateway['Reward Auto Stake']) === 'Enabled' ? '#10B981' : 
-                         (gateway.rewardAutoStake || gateway['Reward Auto Stake']) === 'Disabled' ? '#EF4444' : undefined 
+                  color: gateway.rewardAutoStake === 'Enabled' ? '#10B981' : 
+                         gateway.rewardAutoStake === 'Disabled' ? '#EF4444' : undefined 
                 }}
               >
-                {formatValue(gateway.rewardAutoStake || gateway['Reward Auto Stake'])}
+                {formatValue(gateway.rewardAutoStake)}
               </span>
             </div>
             <div>
@@ -171,15 +197,21 @@ export default function GatewayModal({ gateway, open, onClose }) {
               <span 
                 className="modal-card-value" 
                 style={{ 
-                  color: (gateway.delegatedStaking || gateway['Delegated Staking']) === 'Enabled' ? '#10B981' : 
-                         (gateway.delegatedStaking || gateway['Delegated Staking']) === 'Disabled' ? '#EF4444' : undefined 
+                  color: gateway.delegatedStaking === 'Enabled' ? '#10B981' : 
+                         gateway.delegatedStaking === 'Disabled' ? '#EF4444' : undefined 
                 }}
               >
-                {formatValue(gateway.delegatedStaking || gateway['Delegated Staking'])}
+                {formatValue(gateway.delegatedStaking)}
               </span>
             </div>
-            <div><span className="modal-card-label">Reward Share:</span> <span className="modal-card-value">{formatValue(gateway.rewardShareRatio || gateway['Reward Share Ratio'])}</span></div>
-            <div><span className="modal-card-label">Join Status:</span> <span className="modal-card-value">{formatValue(gateway.status || gateway.Status)}</span></div>
+            <div><span className="modal-card-label">Reward Share:</span> <span className="modal-card-value">
+              {gateway.rewardShareRatio ? gateway.rewardShareRatio : 'N/A'}
+            </span></div>
+            <div><span className="modal-card-label">Join Status:</span> <span className="modal-card-value">
+              {gateway.status === 'ok' ? 'Online' : 
+               gateway.status === 'offline' ? 'Offline' : 
+               gateway.status === 'unknown' ? 'Unknown' : gateway.status}
+            </span></div>
           </div>
         </div>
 
@@ -187,10 +219,10 @@ export default function GatewayModal({ gateway, open, onClose }) {
         <div className="modal-card-box">
           <div className="modal-card-box-title">Technical Info</div>
           <div className="modal-card-box-grid">
-            <div><span className="modal-card-label">IP Address:</span> <span className="modal-card-value" style={{ fontWeight: 600 }}>{formatValue(gateway.ipgeo?.ip || gateway.ip)}</span></div>
-            <div><span className="modal-card-label">Coordinates:</span> <span className="modal-card-value">{gateway.ipgeo?.lat && gateway.ipgeo?.lon ? `${gateway.ipgeo.lat}, ${gateway.ipgeo.lon}` : 'N/A'}</span></div>
-            <div><span className="modal-card-label">Manifest Versions:</span> <span className="modal-card-value">{gateway.info?.supportedManifestVersions?.join(', ') || 'N/A'}</span></div>
-            <div><span className="modal-card-label">ANS104 Bundle Filter:</span> <span className="modal-card-value">{gateway.info?.ans104UnbundleFilter?.never ? 'Never' : 'Allowed'}</span></div>
+            <div><span className="modal-card-label">IP Address:</span> <span className="modal-card-value" style={{ fontWeight: 600 }}>{formatValue(gateway.ip)}</span></div>
+            <div><span className="modal-card-label">Coordinates:</span> <span className="modal-card-value">{gateway.lat && gateway.lon ? `${gateway.lat.toFixed(4)}, ${gateway.lon.toFixed(4)}` : 'N/A'}</span></div>
+            <div><span className="modal-card-label">Manifest Versions:</span> <span className="modal-card-value">N/A</span></div>
+            <div><span className="modal-card-label">ANS104 Bundle Filter:</span> <span className="modal-card-value">N/A</span></div>
           </div>
         </div>
       </div>

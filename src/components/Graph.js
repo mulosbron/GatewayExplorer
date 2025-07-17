@@ -55,23 +55,23 @@ const Graph = ({ gateways, filters, onGatewaySelect }) => {
     const levelConfigs = [
       {
         key: 'country', enabled: enabledLevels.country, radius: 25, color: '#4A90E2',
-        getName: g => g.ipgeo?.country || g.country || 'Unknown'
+        getName: g => g.country || 'Unknown'
       },
       {
         key: 'region', enabled: enabledLevels.region, radius: 20, color: '#50E3C2',
-        getName: g => g.ipgeo?.region || g.state || 'Unknown'
+        getName: g => g.region || 'Unknown'
       },
       {
         key: 'city', enabled: enabledLevels.city, radius: 16, color: '#F5A623',
-        getName: g => g.ipgeo?.city || g.city || 'Unknown'
+        getName: g => g.city || 'Unknown'
       },
       {
         key: 'isp', enabled: enabledLevels.isp, radius: 14, color: '#E67E22',
-        getName: g => g.ipgeo?.isp || g.isp || 'Unknown ISP'
+        getName: g => g.isp || 'Unknown ISP'
       },
       {
         key: 'release', enabled: enabledLevels.release, radius: 12, color: '#9B59B6',
-        getName: g => g.info?.release || 'unknown'
+        getName: g => g.release || 'unknown'
       }
     ];
 

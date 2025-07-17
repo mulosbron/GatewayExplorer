@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { getGatewayStatistics, getNakamotoColor } from '../services/gatewayService';
+// import { getGatewayStatistics, getNakamotoColor } from '../services/gatewayService';
+import { getGatewayStatistics } from '../services/gatewayService';
 
 const Statistics = ({ gateways }) => {
   const stats = useMemo(() => getGatewayStatistics(gateways), [gateways]);
@@ -7,13 +8,6 @@ const Statistics = ({ gateways }) => {
   // Summary values
   const regionCount = Object.keys(stats.regionStats || {}).length;
   const cityCount = Object.keys(stats.cityStats || {}).length;
-
-  // Enhanced decentralization score color function
-  const getDecentralizationColor = (score) => {
-    if (score >= 0.5) return 'var(--success)'; // Green - High decentralization (50%+)
-    if (score >= 0.3) return 'var(--warning)'; // Orange - Medium decentralization (30-49%)
-    return 'var(--danger)'; // Red - Low decentralization (<30%)
-  };
 
   const StatCard = ({ title, value, subtitle, color = '#4A90E2', icon = null }) => (
     <div className="stat-card" style={{ 
@@ -145,6 +139,7 @@ const Statistics = ({ gateways }) => {
     }
 
     const colors = {
+      ok: 'var(--success)',
       online: 'var(--success)',
       offline: 'var(--danger)',
       unknown: 'var(--warning)'

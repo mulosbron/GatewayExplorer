@@ -62,9 +62,9 @@ const FilterPanel = ({ gateways, onFiltersChange }) => {
           onChange={e => handleFilterChange('status', e.target.value)}
         >
           <option value="">All Statuses</option>
-          <option value="ok">Online</option>
-          <option value="offline">Offline</option>
-          <option value="unknown">Unknown</option>
+          <option value="ok">🟢 Online</option>
+          <option value="offline">🔴 Offline</option>
+          <option value="unknown">🟡 Unknown</option>
         </select>
         <select
           className="filter-select"

@@ -67,10 +67,10 @@ const Map = ({ gateways, filters, onGatewaySelect }) => {
     const newZoom = mapRef.current.getZoom();
     setCurrentZoom(newZoom);
     markersRef.current.clearLayers();
-    allMarkersRef.current.forEach(({ marker, gateway }) => {
-      if (gateway.latitude && gateway.longitude) {
-        const marker = L.marker(
-          [gateway.latitude, gateway.longitude],
+         allMarkersRef.current.forEach(({ marker, gateway }) => {
+       if (gateway.lat && gateway.lon) {
+         const marker = L.marker(
+           [gateway.lat, gateway.lon],
           {
             icon: createMarkerIcon(gateway.status, gateway.stake, newZoom),
             gatewayData: gateway
@@ -140,11 +140,15 @@ const Map = ({ gateways, filters, onGatewaySelect }) => {
     });
     markersRef.current = markers;
     map.addLayer(markers);
-    const markerData = gateways
-      .filter(g => g.latitude && g.longitude)
-      .map(gateway => {
-        const marker = L.marker(
-          [gateway.latitude, gateway.longitude],
+         console.log('Total gateways:', gateways.length);
+     console.log('Gateways with coordinates:', gateways.filter(g => g.lat && g.lon).length);
+     console.log('Sample gateway:', gateways[0]);
+     
+     const markerData = gateways
+       .filter(g => g.lat && g.lon)
+       .map(gateway => {
+         const marker = L.marker(
+           [gateway.lat, gateway.lon],
           {
             icon: createMarkerIcon(gateway.status, gateway.stake, map.getZoom()),
             gatewayData: gateway
