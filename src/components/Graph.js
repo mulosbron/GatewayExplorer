@@ -8,7 +8,6 @@ const Graph = ({ gateways, filters, onGatewaySelect }) => {
   const graphRef = useRef(null);
   const svgRef = useRef(null);
   const simulationRef = useRef(null);
-  const [selectedNode, setSelectedNode] = useState(null);
   const [selectedGateway, setSelectedGateway] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -162,7 +161,7 @@ const Graph = ({ gateways, filters, onGatewaySelect }) => {
     svg.on('click', (event) => {
       // Only reset if clicking directly on SVG (not on nodes)
       if (event.target === svg.node()) {
-        setSelectedNode(null);
+        // setSelectedNode(null); // This line is removed
         g.selectAll('.node-tooltip').remove();
         
         // Reset all links and nodes to normal opacity
@@ -179,7 +178,7 @@ const Graph = ({ gateways, filters, onGatewaySelect }) => {
         simulationRef.current.stop();
       }
     };
-  }, [gateways.length > 0]); // Only re-initialize when gateways first load
+  }, [gateways.length, graphRef, simulationRef, svgRef]); // Only re-initialize when gateways first load
 
   // Update graph data without full re-render
   useEffect(() => {
@@ -278,7 +277,7 @@ const Graph = ({ gateways, filters, onGatewaySelect }) => {
           .text(d.name);
       }
 
-          setSelectedNode(d);
+      // setSelectedNode(d); // This line is removed
       
       if (d.type === 'gateway' && d.gateway) {
         setSelectedGateway(d.gateway);
@@ -345,7 +344,7 @@ const Graph = ({ gateways, filters, onGatewaySelect }) => {
     // Restart simulation with new data
     simulation.alpha(0.3).restart();
 
-  }, [graphData]);
+  }, [graphData, svgRef, simulationRef, onGatewaySelect]);
 
   return (
     <>

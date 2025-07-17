@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
@@ -58,14 +58,12 @@ const Map = ({ gateways, filters, onGatewaySelect }) => {
   const mapContainerRef = useRef(null);
   const [selectedGateway, setSelectedGateway] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [currentZoom, setCurrentZoom] = useState(3);
   const allMarkersRef = useRef([]);
 
   // Markerları tekrar divIcon olarak oluştur
-  const updateMarkerSizes = () => {
+  const updateMarkerSizes = useCallback(() => {
     if (!mapRef.current || !allMarkersRef.current) return;
     const newZoom = mapRef.current.getZoom();
-    setCurrentZoom(newZoom);
     markersRef.current.clearLayers();
          allMarkersRef.current.forEach(({ marker, gateway }) => {
        if (gateway.lat && gateway.lon) {
@@ -84,7 +82,7 @@ const Map = ({ gateways, filters, onGatewaySelect }) => {
         markersRef.current.addLayer(marker);
       }
     });
-  };
+  }, [allMarkersRef, mapRef, markersRef, onGatewaySelect]);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -165,7 +163,7 @@ const Map = ({ gateways, filters, onGatewaySelect }) => {
     allMarkersRef.current = markerData;
     map.on('zoomend', updateMarkerSizes);
     return () => { if (map) { map.remove(); } };
-  }, [gateways, onGatewaySelect]);
+  }, [gateways, onGatewaySelect, mapContainerRef, mapRef, markersRef, allMarkersRef, updateMarkerSizes]);
 
   return (
     <>
