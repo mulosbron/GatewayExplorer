@@ -294,7 +294,7 @@ function AppContent() {
               
               <div className="footer-meta">
                 <div className="footer-update">
-                  <span>v1.0.5</span>
+                  <span>v1.0.6</span>
                 </div>
               </div>
             </div>
