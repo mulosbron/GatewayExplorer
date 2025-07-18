@@ -130,7 +130,7 @@ const Map = ({ gateways, filters, onGatewaySelect }) => {
         };
         const size = getClusterSize(count);
         return L.divIcon({
-          html: `<div style="background: #D1D5DB; border: 3px solid #FFFFFF; border-radius: 50%; width: ${size}px; height: ${size}px; display: flex; align-items: center; justify-content: center; color: #0F172A; font-weight: 700; font-size: ${Math.floor(size * 0.35)}px; box-shadow: 0 6px 20px rgba(0,0,0,0.65);">${count}</div>`,
+          html: `<div style="background: #D1D5DB; border: 3px solid var(--color-white); border-radius: 50%; width: ${size}px; height: ${size}px; display: flex; align-items: center; justify-content: center; color: #0F172A; font-weight: 700; font-size: ${Math.floor(size * 0.35)}px; box-shadow: 0 6px 20px rgba(0,0,0,0.65);">${count}</div>`,
           className: 'custom-cluster',
           iconSize: L.point(size, size)
         });

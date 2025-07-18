@@ -3,35 +3,47 @@
 /* CSS Variables for New Design System */
 :root {
   /* New Color Palette - Clean & Minimal */
-  --color-white: #FCFCFC;
-  --color-black: #0E0E0F;
-  --color-dark-gray: #1E1E24;
-  --color-light-gray: #4A4A4E;
+  --color-white: #FFFFFF;
+  --color-black: #000000;
+  --color-gray-1100: #050505;
+  --color-gray-1000: #0E0E0F;
+  --color-gray-900: #1C1C1F;
+  --color-gray-800: #1E1E24;
+  --color-gray-700: #212124;
+  --color-gray-600: #262629;
+  --color-gray-500: #303038;
+  --color-gray-400: #3B3B45;
+  --color-gray-300: #7F7F87;
+  --color-gray-200: #A3A3AD;
+  --color-gray-100: #CACAD6;
   
   /* Primary Colors */
-  --primary: var(--color-dark-gray);
-  --primary-light: #2A2A30;
-  --primary-dark: #16161A;
+  --primary: var(--color-gray-1100);
+  --primary-setup-guide: var(--color-gray-400);
+  --primary-setup-guide2: var(--color-gray-200);
+  --primary-setup-guide3: var(--color-gray-100);
+  --primary-light: var(--color-gray-500);
+  --primary-dark: var(--color-gray-800);
   
   /* Background Colors */
-  --bg-primary: var(--color-black);
-  --bg-secondary: var(--color-dark-gray);
-  --bg-tertiary: #16161A;
-  --bg-graph: #262626;
+  --bg-primary: var(--color-gray-1000);
+  --bg-secondary: var(--color-gray-900);
+  --bg-tertiary: var(--color-gray-800);;
+  --bg-graph: var(--color-gray-600);;
   --bg-card: rgba(30, 30, 36, 0.6);
   --bg-glass: rgba(30, 30, 36, 0.1);
   
   /* Text Colors */
-  --text-primary: #FCFCFC;
-  --text-secondary: #D1D5DB;
-  --text-muted: #B0B4BC;
-  --text-accent: #F5F5F7;
+  --text-primary: #FFFFFF;           
+  --text-secondary: #CACAD6;         
+  --text-muted: #A3A3AD;       
+  --text-accent: #7F7F87; 
   
   /* Border Colors */
-  --border-color: rgba(74, 74, 78, 0.2);
-  --border-hover: rgba(74, 74, 78, 0.3);
-  --border-focus: rgba(74, 74, 78, 0.4);
-  --divider: rgba(74, 74, 78, 0.1);
+  --border-color: rgba(59, 59, 69, 0.2);
+  --border-hover: rgba(59, 59, 69, 0.3);
+  --border-focus: rgba(59, 59, 69, 0.4);
+  --divider: rgba(59, 59, 69, 0.1);
   
   /* Status Colors */
   --success: #10B981;
@@ -42,9 +54,9 @@
   --warning-light: #FBBF24;
   
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, var(--color-dark-gray) 0%, var(--primary-light) 100%);
-  --gradient-card: linear-gradient(145deg, rgba(30, 30, 36, 0.8) 0%, rgba(22, 22, 26, 0.6) 100%);
-  --gradient-hover: linear-gradient(135deg, rgba(30, 30, 36, 0.9) 0%, rgba(42, 42, 48, 0.7) 100%);
+  --gradient-primary: linear-gradient(135deg, var(--color-gray-700) 0%, var(--primary-light) 100%);
+  --gradient-card: linear-gradient(145deg, rgba(30, 30, 36, 0.8) 0%, rgba(14, 14, 15, 0.6) 100%);
+  --gradient-hover: linear-gradient(135deg, rgba(30, 30, 36, 0.9) 0%, rgba(38, 38, 41, 0.7) 100%);
   
   /* Shadows */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -85,10 +97,7 @@
   /* Z-Index */
   --z-dropdown: 1000;
   --z-sticky: 1020;
-  --z-fixed: 1030;
   --z-modal: 1040;
-  --z-popover: 1050;
-  --z-tooltip: 1060;
 }
 
 /* Global Reset and Base Styles */
@@ -459,15 +468,25 @@ body {
 
 /* Setup Guide on the left side */
 .setup-guide-left {
-  background: linear-gradient(135deg, var(--primary), var(--success));
+  background: linear-gradient(225deg, var(--primary-setup-guide), var(--success-light));
   color: white !important;
   border-radius: var(--radius-md);
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(0, 212, 170, 0.3);
   transition: all var(--transition-fast);
+  align-items: center;
+  display: flex;
+  gap: 4px;
+  font-size: var(--font-size-sm);
+  padding: var(--space-sm) var(--space-md);
+  position: relative;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .setup-guide-left:hover {
+  background: linear-gradient(225deg, var(--primary-setup-guide2), var(--primary-setup-guide3));
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(0, 212, 170, 0.4);
   color: white !important;
@@ -476,6 +495,10 @@ body {
 .setup-guide-left .external-icon {
   color: white;
   opacity: 1;
+  font-size: 0.8rem;
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
 }
 
 /* Responsive Design */
@@ -1209,7 +1232,7 @@ body {
   :root {
     --border-color: rgba(255, 255, 255, 0.3);
     --border-hover: rgba(255, 255, 255, 0.5);
-    --text-secondary: #ffffff;
+    --text-secondary: var(--color-white);
   }
 }
 

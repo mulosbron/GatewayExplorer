@@ -111,7 +111,7 @@ const Graph = ({ gateways, filters, onGatewaySelect }) => {
         name: gateway.label || gateway.Label || gateway.domain || 'Gateway',
         gateway: gateway,
         radius: Math.max(8, Math.min(15, (gateway.stake || 0) / 100000)),
-        color: normalizedStatus === 'ok' ? '#4caf50' : normalizedStatus === 'offline' ? '#f44336' : '#ff9800',
+        color: normalizedStatus === 'ok' ? 'var(--success)' : normalizedStatus === 'offline' ? 'var(--danger)' : 'var(--warning)',
         status: normalizedStatus
       };
       nodes.push(gatewayNode);
@@ -269,7 +269,7 @@ const Graph = ({ gateways, filters, onGatewaySelect }) => {
           .attr('data-id', d.id)
           .attr('x', d.x)
           .attr('y', d.y - d.radius - 15)
-          .attr('fill', '#ffffff')
+          .attr('fill', 'var(--color-white)')
           .attr('font-size', '14px')
           .attr('font-weight', '600')
           .attr('text-anchor', 'middle')
