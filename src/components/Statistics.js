@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 // import { getGatewayStatistics, getNakamotoColor } from '../services/gatewayService';
 import { getGatewayStatistics } from '../services/gatewayService';
+import EmojiIcon from './EmojiIcon';
 
 const Statistics = ({ gateways }) => {
   const stats = useMemo(() => getGatewayStatistics(gateways), [gateways]);
@@ -79,6 +80,19 @@ const Statistics = ({ gateways }) => {
       </div>
     </div>
   );
+
+  // Lucide ikon eşleştirmeleri
+  const lucideIcons = {
+    globe: <EmojiIcon name="Globe" size={32} color="#00d4aa" />,
+    trendingUp: <EmojiIcon name="TrendingUp" size={32} color="#10B981" />,
+    circleDot: <EmojiIcon name="CircleDot" size={32} color="#10B981" />,
+    circleX: <EmojiIcon name="CircleX" size={32} color="#EF4444" />,
+    map: <EmojiIcon name="MapPin" size={32} color="#50E3C2" />,
+    building: <EmojiIcon name="Building" size={32} color="#F5A623" />,
+    pieChart: <EmojiIcon name="PieChart" size={28} color="#6366f1" />,
+    barChart: <EmojiIcon name="BarChart" size={28} color="#4A90E2" />,
+    wrench: <EmojiIcon name="Wrench" size={28} color="#F39C12" />,
+  };
 
   const BarChart = ({ data, maxItems = 12, color = 'var(--text-primary)' }) => {
     if (!data || typeof data !== 'object') {
@@ -272,39 +286,39 @@ const Statistics = ({ gateways }) => {
     <div className="statistics-container">
       {/* Summary cards */}
       <div className="statistics-summary-grid">
-        <StatCard title="Total Gateways" value={stats.total} subtitle="Network Wide" color="#00d4aa" icon="🌐" />
-        <StatCard title="Network Health" value={`${((stats.online / stats.total) * 100).toFixed(1)}%`} subtitle="Online Gateway Rate" color="var(--success)" icon="📈" />
-        <StatCard title="Online" value={stats.online} subtitle="Active Now" color="var(--success)" icon="🟢" />
-        <StatCard title="Offline" value={stats.offline} subtitle="Inactive" color="var(--danger)" icon="🔴" />
-        <StatCard title="Countries" value={stats.countries} subtitle="Global Reach" color="#4A90E2" icon="🌍" />
-        <StatCard title="Regions" value={regionCount} subtitle="Distributed" color="#50E3C2" icon="📍" />
-        <StatCard title="Cities" value={cityCount} subtitle="Locations" color="#F5A623" icon="🏙️" />
+        <StatCard title="Total Gateways" value={stats.total} subtitle="Network Wide" color="#00d4aa" icon={lucideIcons.globe} />
+        <StatCard title="Network Health" value={`${((stats.online / stats.total) * 100).toFixed(1)}%`} subtitle="Online Gateway Rate" color="var(--success)" icon={lucideIcons.trendingUp} />
+        <StatCard title="Online" value={stats.online} subtitle="Active Now" color="var(--success)" icon={lucideIcons.circleDot} />
+        <StatCard title="Offline" value={stats.offline} subtitle="Inactive" color="var(--danger)" icon={lucideIcons.circleX} />
+        <StatCard title="Countries" value={stats.countries} subtitle="Global Reach" color="#4A90E2" icon={lucideIcons.globe} />
+        <StatCard title="Regions" value={regionCount} subtitle="Distributed" color="#50E3C2" icon={lucideIcons.map} />
+        <StatCard title="Cities" value={cityCount} subtitle="Locations" color="#F5A623" icon={lucideIcons.building} />
       </div>
 
       {/* Gateway Status Distribution */}
-      <ChartContainer title="Gateway Status Distribution" icon="📊">
+      <ChartContainer title="Gateway Status Distribution" icon={lucideIcons.pieChart}>
         <StatusPieChart data={stats.statusStats} />
       </ChartContainer>
 
       {/* Charts Grid */}
       <div className="statistics-charts-grid">
-        <ChartContainer title="Top Countries" icon="🌍">
+        <ChartContainer title="Top Countries" icon={lucideIcons.globe}>
           <BarChart data={stats.countryStats} color="#4A90E2" />
         </ChartContainer>
 
-        <ChartContainer title="Top Regions" icon="📍">
+        <ChartContainer title="Top Regions" icon={lucideIcons.map}>
           <BarChart data={stats.regionStats} color="#50E3C2" />
         </ChartContainer>
 
-        <ChartContainer title="Top Cities" icon="🏙️">
+        <ChartContainer title="Top Cities" icon={lucideIcons.building}>
           <BarChart data={stats.cityStats} color="#F5A623" />
         </ChartContainer>
 
-        <ChartContainer title="Top ISPs" icon="🌐">
+        <ChartContainer title="Top ISPs" icon={lucideIcons.globe}>
           <BarChart data={stats.ispStats} color="#9B59B6" />
         </ChartContainer>
 
-        <ChartContainer title="Release Versions" icon="🛠️">
+        <ChartContainer title="Release Versions" icon={lucideIcons.wrench}>
           <BarChart data={stats.releaseStats} color="#F39C12" />
         </ChartContainer>
       </div>

@@ -6,6 +6,7 @@ import Statistics from './components/Statistics';
 import { getAllGatewayDataV2 } from './services/gatewayService';
 import Logo from './components/Logo';
 import './App.css';
+import EmojiIcon from "./components/EmojiIcon";
 
 function AppContent() {
   const [allGateways, setAllGateways] = useState([]);
@@ -195,7 +196,7 @@ function AppContent() {
             title="How to run ARIO gateway"
           >
             Setup Guide
-            <span className="external-icon">↗</span>
+            <span className="external-icon"><EmojiIcon name="ExternalLink" size={18} color="white" /></span>
           </a>
           </div>
 
@@ -293,7 +294,7 @@ function AppContent() {
               
               <div className="footer-meta">
                 <div className="footer-update">
-                  <span>v1.0.4</span>
+                  <span>v1.0.5</span>
                 </div>
               </div>
             </div>
