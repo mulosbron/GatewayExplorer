@@ -1,7 +1,5 @@
 # AR.IO Gateway Explorer
 
-**Version:** 1.0.1
-
 A comprehensive visualization tool for exploring AR.IO Gateway network infrastructure. Built with React, D3.js, and Leaflet.js to provide interactive maps, network graphs, and detailed statistics of the AR.IO Gateway ecosystem.
 
 ## 🚀 Features

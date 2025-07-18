@@ -1,6 +1,6 @@
 {
   "name": "ariogatewayexplorer",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": true,
   "dependencies": {
     "@ar.io/sdk": "^3.14.0",
